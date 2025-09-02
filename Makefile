@@ -14,3 +14,9 @@ sync:
 	git add .
 	git commit -m "sync at $(shell powershell -Command "Get-Date -Format 'yyyy-MM-dd HH:mm:ss'")"
 	git push -u origin main
+
+sync-c:
+	make pull
+	git add .
+	git commit -m "sync at $(shell echo %DATE% %TIME%)"
+	git push -u origin main
