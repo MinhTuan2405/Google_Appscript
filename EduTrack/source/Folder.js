@@ -4,23 +4,27 @@ function showSidebar() {
   SpreadsheetApp.getUi().showSidebar(html);
 }
 
-// --- Get list of root folders (children of a parent folder) ---
-function getRootFolders(parentFolderId) {
-  const parentFolder = DriveApp.getFolderById(parentFolderId);
-  const folders = [];
-  const iterator = parentFolder.getFolders();
-  while (iterator.hasNext()) {
-    const f = iterator.next();
-    folders.push({id: f.getId(), name: f.getName()});
-  }
-  return folders;
+
+function getAllClasses() {
+  const sheet = SpreadsheetApp
+                .getActiveSpreadsheet()
+                .getSheetByName('classList');
+
+  if (!sheet) return [];
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return []; 
+
+  const data = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+
+  const cleanedData = data.map(row => row[0]).filter(val => val);
+
+  const distinctSet = new Set(cleanedData);
+
+  const res = Array.from(distinctSet);
+
+  res.forEach(item => Logger.log(item));
+
+  return res;
 }
 
-// --- Create subfolders under a root folder ---
-function createSubfolders(rootFolderId, subfolderNames) {
-  const rootFolder = DriveApp.getFolderById(rootFolderId);
-  subfolderNames.forEach(name => {
-    if (name) rootFolder.createFolder(name);
-  });
-  return `Created ${subfolderNames.length} subfolders under "${rootFolder.getName()}"`;
-}

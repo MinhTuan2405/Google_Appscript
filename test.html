@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Folder Pattern Loader</title>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 13px; margin:0; padding:12px; background:#f5f5f7; color:#202124; }
+  textarea { width: 100%; height: 80px; margin-bottom:8px; }
+  button { margin: 2px; padding: 4px 8px; cursor:pointer; }
+  .folder { position: relative; padding:4px 8px; margin:2px 0; border-radius:6px; background:#fff; display:flex; align-items:center; transition: background 0.2s; }
+  .folder:hover { background:#e8f0fe; }
+  .folder-left { display:flex; align-items:center; gap:6px; }
+  .folder-actions { margin-left:auto; display:flex; gap:4px; }
+  .folder-actions button { border:none; background:transparent; color:#5f6368; cursor:pointer; font-size:12px; }
+  .folder-actions button:hover { color:#1a73e8; }
+  input { font-size:13px; padding:2px 4px; border:1px solid #dadce0; border-radius:4px; outline:none; background:transparent; }
+  .subfolders { margin-left:20px; position:relative; }
+  .subfolders::before { content:''; position:absolute; top:0; left:10px; width:1px; height:100%; background:#cfd8dc; }
+  .subfolders .folder::before { content:''; position:absolute; top:12px; left:-10px; width:10px; height:1px; background:#cfd8dc; }
+</style>
+</head>
+<body>
+
+<h3>Paste Tree Text</h3>
+<textarea id="treeInput" placeholder="Paste tree here..."></textarea>
+<button onclick="loadTree()">Load Tree</button>
+
+<div id="rootsContainer"></div>
+
+<script>
+const rootsContainer = document.getElementById('rootsContainer');
+
+// Hàm parse text tree thành object
+function parseTreeText(text) {
+  const lines = text.split('\n');
+  const tree = [];
+  const stack = [];
+  for(let line of lines) {
+    line = line.replace(/\r/g,'').trimEnd();
+    if(!line || line.startsWith('Class:')) continue;
+
+    const match = line.match(/^( *)(├─ |└─ )?(.*)$/);
+    if(!match) continue;
+
+    const indent = match[1].length;
+    const name = match[3].trim();
+    const level = Math.floor(indent / 3);
+
+    const node = { name, children: [] };
+
+    if(level === 0) {
+      tree.push(node);
+      stack.length = 0;
+      stack.push(node);
+    } else {
+      stack[level-1].children.push(node);
+      stack[level] = node;
+    }
+  }
+  return tree;
+}
+
+// Hàm render object tree thành folder HTML
+function renderTreeToHTML(tree, container) {
+  tree.forEach(node => {
+    const folderDiv = document.createElement('div');
+    folderDiv.className = 'folder';
+    folderDiv.innerHTML = `
+      <div class="folder-left">
+        <span>📁</span>
+        <input type="text" value="${node.name}">
+      </div>
+      <div class="folder-actions">
+        <button onclick="addChild(this)">+ Sub</button>
+        <button onclick="addSibling(this)">+ Sib</button>
+        <button onclick="deleteFolder(this)">❌</button>
+      </div>
+      <div class="subfolders"></div>
+    `;
+    container.appendChild(folderDiv);
+
+    if(node.children && node.children.length > 0){
+      const subContainer = folderDiv.querySelector('.subfolders');
+      renderTreeToHTML(node.children, subContainer);
+    }
+  });
+}
+
+// Các hàm thao tác folder
+function addFolder(container){ renderTreeToHTML([{name:'', children:[]}], container||rootsContainer); }
+function addChild(btn){ const current = btn.closest('.folder'); addFolder(current.querySelector('.subfolders')); }
+function addSibling(btn){ const current = btn.closest('.folder'); addFolder(current.parentElement); }
+function deleteFolder(btn){ btn.closest('.folder').remove(); }
+
+// Load tree từ textarea
+function loadTree() {
+  const text = document.getElementById('treeInput').value;
+  const tree = parseTreeText(text);
+  rootsContainer.innerHTML = '';
+  renderTreeToHTML(tree, rootsContainer);
+}
+</script>
+
+</body>
+</html>
