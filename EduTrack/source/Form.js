@@ -150,10 +150,6 @@ function manualSync() {
 
 
 
-
-
-
-
 ///////////////////
 downloalClassList
 ///////////////////

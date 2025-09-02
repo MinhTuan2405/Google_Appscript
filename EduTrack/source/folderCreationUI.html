@@ -1,50 +1,230 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <base target="_top">
-    <style>
-      body { font-family: Arial; padding: 10px; }
-      input, button { margin: 5px 0; width: 100%; }
-      .subfolder { display: flex; margin-bottom: 5px; }
-      .subfolder input { flex: 1; }
-    </style>
-  </head>
-  <body>
-    <h3>Create Folder Structure</h3>
+<head>
+  <meta charset="UTF-8">
+  <title>Folder Pattern Creator</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 13px;
+    margin: 0;
+    padding: 12px;
+    background: #f5f5f7;
+    color: #202124;
+    overflow-y: auto;
+  }
 
-    <label>Parent Folder Name:</label>
-    <input type="text" id="parentName" placeholder="Enter parent folder name">
+  h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #202124;
+  }
 
-    <div id="subfoldersContainer">
-      <div class="subfolder">
-        <input type="text" placeholder="Subfolder name">
-      </div>
-    </div>
+  .top-buttons {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
 
-    <button onclick="addLevel()">+ Create New Level</button>
-    <button onclick="createFolders()">Create</button>
+  .top-buttons button {
+    background: #ffffff;
+    border: 1px solid #dadce0;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
 
-    <p id="result"></p>
+  .top-buttons button:hover {
+    background: #e8f0fe;
+    border-color: #1a73e8;
+  }
 
-    <script>
-      function addLevel() {
-        const container = document.getElementById('subfoldersContainer');
-        const div = document.createElement('div');
-        div.className = 'subfolder';
-        div.innerHTML = '<input type="text" placeholder="Subfolder name">';
-        container.appendChild(div);
+  /* Folder container */
+  .folder {
+    position: relative;
+    padding: 4px 8px;
+    margin: 2px 0;
+    border-radius: 6px;
+    background: #ffffff;
+    transition: background 0.2s;
+  }
+
+  .folder:hover {
+    background: #e8f0fe;
+  }
+
+  .folder-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .folder-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 4px;
+  }
+
+  .folder-actions button {
+    border: none;
+    background: transparent;
+    color: #5f6368;
+    cursor: pointer;
+    padding: 2px 4px;
+    font-size: 12px;
+    transition: color 0.2s;
+  }
+
+  .folder-actions button:hover {
+    color: #1a73e8;
+  }
+
+  input {
+    font-size: 13px;
+    padding: 2px 4px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    outline: none;
+    background: transparent;
+    transition: border-color 0.2s;
+  }
+
+  input:focus {
+    border-color: #1a73e8;
+  }
+
+  /* Subfolder tree lines */
+  .subfolders {
+    margin-left: 20px;
+    position: relative;
+  }
+
+  .subfolders::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10px; /* adjust line position */
+    width: 1px;
+    height: 100%;
+    background: #cfd8dc;
+  }
+
+  .subfolders .folder::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: -10px; /* connect to vertical line */
+    width: 10px;
+    height: 1px;
+    background: #cfd8dc;
+  }
+
+  #patternResult {
+    white-space: pre;
+    background: #ffffff;
+    color: #202124;
+    padding: 10px;
+    margin-top: 12px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 12px;
+    max-height: 220px;
+    overflow-y: auto;
+    box-shadow: inset 0 0 4px rgba(60,64,67,0.1);
+  }
+</style>
+
+
+</head>
+<body>
+  <div class="top-buttons">
+    <button onclick="addFolder(null)">+ Root Folder</button>
+    <button onclick="showPattern()">Show Pattern</button>
+  </div>
+
+  <div id="rootsContainer"></div>
+  <div id="patternResult"></div>
+
+  <script>
+    const rootsContainer = document.getElementById('rootsContainer');
+
+    function addFolder(container) {
+      const folderDiv = document.createElement('div');
+      folderDiv.className = 'folder';
+
+      folderDiv.innerHTML = `
+        <div class="folder-left">
+          <span>📁</span>
+          <input type="text" placeholder="Folder Name">
+        </div>
+        <div class="folder-actions">
+          <button onclick="addChild(this)">+ Sub</button>
+          <button onclick="addSibling(this)">+ Sib</button>
+          <button onclick="deleteFolder(this)">❌</button>
+        </div>
+        <div class="subfolders"></div>
+      `;
+
+      if (!container) {
+        rootsContainer.appendChild(folderDiv);
+      } else {
+        container.appendChild(folderDiv);
       }
+    }
 
-      function createFolders() {
-        const parentName = document.getElementById('parentName').value;
-        const inputs = document.querySelectorAll('#subfoldersContainer input');
-        const subfolders = Array.from(inputs).map(i => i.value.trim()).filter(v => v.length > 0);
+    function addChild(btn) {
+      const currentFolder = btn.closest('.folder');
+      const subContainer = currentFolder.querySelector('.subfolders');
+      addFolder(subContainer);
+    }
 
-        google.script.run.withSuccessHandler(msg => {
-          document.getElementById('result').innerText = msg;
-        }).createFolderStructure(parentName, subfolders);
-      }
-    </script>
-  </body>
+    function addSibling(btn) {
+      const currentFolder = btn.closest('.folder');
+      const parentContainer = currentFolder.parentElement;
+      addFolder(parentContainer);
+    }
+
+    function deleteFolder(btn) {
+      const folder = btn.closest('.folder');
+      folder.remove();
+    }
+
+    function collectFolders(container) {
+      const folders = [];
+      const divs = container.querySelectorAll(':scope > .folder');
+      divs.forEach(div => {
+        const name = div.querySelector('input').value.trim();
+        const children = collectFolders(div.querySelector('.subfolders'));
+        if(name || children.length > 0) {
+          folders.push({name, children});
+        }
+      });
+      return folders;
+    }
+
+    function formatPattern(folders, prefix = '') {
+      let text = '';
+      folders.forEach((f, index) => {
+        const isLast = index === folders.length - 1;
+        const branch = prefix + (isLast ? '└─ ' : '├─ ');
+        text += f.name ? branch + f.name + '\n' : '';
+        if(f.children.length > 0) {
+          const newPrefix = prefix + (isLast ? '   ' : '│  ');
+          text += formatPattern(f.children, newPrefix);
+        }
+      });
+      return text;
+    }
+
+    function showPattern() {
+      const folders = collectFolders(rootsContainer);
+      const patternText = formatPattern(folders);
+      document.getElementById('patternResult').innerText = patternText || 'No folders defined.';
+    }
+  </script>
+</body>
 </html>
-

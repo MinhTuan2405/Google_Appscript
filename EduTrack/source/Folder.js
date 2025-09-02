@@ -1,16 +1,26 @@
 function showSidebar() {
-  const html = HtmlService.createHtmlOutputFromFile('folderCreationUI') // ref: folderCreationUI.html
-    .setTitle('Folder Creator');
+  const html = HtmlService.createHtmlOutputFromFile('folderCreationUI') // ref: folderCreationUI
+    .setTitle('Folder Pattern Creator');
   SpreadsheetApp.getUi().showSidebar(html);
 }
 
-// --- Create folder with subfolders ---
-function createFolderStructure(parentFolderName, subfolders) {
-  const parentFolder = DriveApp.createFolder(parentFolderName);
+// --- Get list of root folders (children of a parent folder) ---
+function getRootFolders(parentFolderId) {
+  const parentFolder = DriveApp.getFolderById(parentFolderId);
+  const folders = [];
+  const iterator = parentFolder.getFolders();
+  while (iterator.hasNext()) {
+    const f = iterator.next();
+    folders.push({id: f.getId(), name: f.getName()});
+  }
+  return folders;
+}
 
-  subfolders.forEach(name => {
-    if (name) parentFolder.createFolder(name);
+// --- Create subfolders under a root folder ---
+function createSubfolders(rootFolderId, subfolderNames) {
+  const rootFolder = DriveApp.getFolderById(rootFolderId);
+  subfolderNames.forEach(name => {
+    if (name) rootFolder.createFolder(name);
   });
-
-  return `Folder "${parentFolderName}" created with ${subfolders.length} subfolders!`;
+  return `Created ${subfolderNames.length} subfolders under "${rootFolder.getName()}"`;
 }
