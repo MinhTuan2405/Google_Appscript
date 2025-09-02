@@ -50,9 +50,17 @@ function buildForm(subject, classCode, deadline, notes) {
   const editUrl = form.getEditUrl();
   const publishUrl = form.getPublishedUrl();
 
-  // ---- Move form file into "temp" folder ----
-  const appFile = DriveApp.getFileById(ss.getId());  // current spreadsheet
-  const parentFolder = appFile.getParents().next();  // its parent folder
+  // Get current spreadsheet file
+  const appFile = DriveApp.getFileById(ss.getId());
+  const parents = appFile.getParents();
+
+  let parentFolder;
+  if (parents.hasNext()) {
+    parentFolder = parents.next();
+  } else {
+    // without parent (file in root My Drive)
+    parentFolder = DriveApp.getRootFolder();
+  }
 
   // find or create "temp" folder
   let tempFolder;
