@@ -1,0 +1,23 @@
+{
+  "name": "google",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clasp": "clasp"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MinhTuan2405/Google_Appscript.git"
+  },
+  "author": "mnhtndev",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MinhTuan2405/Google_Appscript/issues"
+  },
+  "homepage": "https://github.com/MinhTuan2405/Google_Appscript#readme",
+  "description": "",
+  "devDependencies": {
+    "@google/clasp": "^3.0.6-alpha"
+  }
+}
