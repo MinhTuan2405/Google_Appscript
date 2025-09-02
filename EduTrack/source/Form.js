@@ -123,24 +123,22 @@ function manualSync() {
       const responseFile = files.next();
       const responseSs = SpreadsheetApp.openById(responseFile.getId());
       const responseSheet = responseSs.getSheets()[0];
-      const data = responseSheet.getDataRange().getValues();
+      let data = responseSheet.getDataRange().getValues();
 
       if (data.length > 1) {
         // --- Set header if not yet ---
         if (!headersSet) {
-          const formHeaders = data[0]; // header from response sheet
+          const formHeaders = data[0].slice(1); // header from response sheet
           targetSheet.appendRow(["Class Name", ...formHeaders]);
-          targetSheet.getRange(1, 1, 1, 15).setFontWeight("bold").setBackground("#d9ead3");
+          targetSheet.getRange(1, 1, 1, 14).setFontWeight("bold").setBackground("#d9ead3");
           headersSet = true;
         }
 
         // --- Append data rows ---
         for (let i = 1; i < data.length; i++) {
-          const row = data[i];
+          const row = data[i].slice(1);
           // Get class name from form title (response sheet name: "Responses - {ClassName}")
-          let className = responseSs.getName();
-          const clsNames = className.split ('-')
-          className = clsNames[clsNames.length-1]
+          const className = responseSs.getName().replace("Responses -", "").trim().split(" - ").pop();
           targetSheet.appendRow([className, ...row]);
         }
       }
