@@ -13,8 +13,8 @@ function onOpen () {
                   .addItem ('Download class list', 'downloalClassList')) 
     .addSeparator ()
 
-    .addSubMenu (ui.createMenu ("Folder")
-                  .addItem ('Create folder with template', 'createFolderWithTemplate')
+    .addSubMenu (ui.createMenu ("Folder") // ref: Folder.gs
+                  .addItem('Open Folder Creator', 'showSidebar')
                   .addItem ('Create folder', 'createFolder'))
     .addSeparator ()
 

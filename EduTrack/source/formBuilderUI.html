@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #f4f6f9;
+        color: #2c3e50;
+        margin: 0;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        padding: 14px;
+      }
+
+      h3 {
+        font-size: 16px;
+        margin: 0 0 6px 0;
+        text-align: center;
+        color: #34495e;
+      }
+
+      p {
+        font-size: 12px;
+        margin: 0 0 12px 0;
+        text-align: center;
+        color: #666;
+      }
+
+      label {
+        font-size: 12px;
+        font-weight: 600;
+        display: block;
+        margin-top: 10px;
+        margin-bottom: 4px;
+      }
+
+      input, textarea {
+        width: 100%;
+        padding: 6px 8px;
+        border: 1px solid #dcdde1;
+        border-radius: 6px;
+        font-size: 12px;
+        box-sizing: border-box;
+      }
+
+      input:focus, textarea:focus {
+        border-color: #3498db;
+        outline: none;
+        box-shadow: 0 0 3px rgba(52,152,219,0.3);
+      }
+
+      textarea {
+        resize: vertical;
+      }
+
+      .btn {
+        margin-top: 10px;
+        padding: 6px 10px;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .btn-primary {
+        background: #3498db;
+        color: #fff;
+        width: 100%;
+        justify-content: center;
+      }
+      .btn-primary:hover {
+        background: #2980b9;
+      }
+
+      .btn-secondary {
+        background: #2ecc71;
+        color: #fff;
+        width: 100%;
+        justify-content: center;
+      }
+      .btn-secondary:hover {
+        background: #27ae60;
+      }
+
+      .btn-outline {
+        background: #fff;
+        border: 1px solid #bdc3c7;
+        color: #34495e;
+        padding: 5px 8px;
+        font-size: 11px;
+      }
+      .btn-outline:hover {
+        background: #ecf0f1;
+      }
+
+      .btn-success {
+        background: #27ae60;
+        color: white;
+      }
+
+      #output {
+        margin-top: 14px;
+        padding: 10px;
+        border-radius: 6px;
+        background: #fafafa;
+        border: 1px solid #e0e0e0;
+        font-size: 12px;
+      }
+
+      #for_link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        gap: 6px;
+      }
+
+      #link {
+        flex: 1;
+        font-size: 11px;
+        color: #2980b9;
+        margin: 0;
+        word-break: break-word;
+      }
+
+      #status {
+        font-size: 11px;
+        color: #27ae60;
+        margin-top: 4px;
+        display: none;
+      }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  </head>
+  <body>
+    <div class="card">
+      <h3>📋 Form Builder</h3>
+      <p>Fill the fields below to create a new form (Optional)</p>
+
+      <label>Subject:</label>
+      <input type="text" id="subject" value="Class list">
+
+      <label>Class:</label>
+      <input type="text" id="classCode" value="COMP1314">
+
+      <label>Form closing date:</label>
+      <input type="date" id="deadline" value="2025-09-30">
+
+      <label>Notes:</label>
+      <textarea id="note" rows="3">Form created automatically. Please complete before deadline.</textarea>
+
+      <button id="createBtn" class="btn btn-primary" onclick="create_new_form()">
+        <i class="fa fa-plus-circle"></i> Create Form
+      </button>
+
+      <div id="loading" style="display:none; text-align:center; margin-top:8px; font-size:12px; color:#3498db;">
+        <i class="fa fa-spinner fa-spin"></i> Creating form, please wait...
+      </div>
+
+
+      <div id="output">
+        <div id="for_link">
+          <p id="link">https://example.com/my-form</p>
+          <button id="copyBtn" class="btn btn-outline" onclick="copy_link()">
+            <i class="fa fa-copy"></i>
+          </button>
+        </div>
+        <span id="status">✔ Link copied!</span>
+        <button class="btn btn-secondary" onclick="download_class_list()">
+          <i class="fa fa-download"></i> Download list
+        </button>
+      </div>
+    </div>
+
+    <script>
+        // create new form
+        function create_new_form() {
+          const subject = document.getElementById('subject').value;
+          const classCode = document.getElementById('classCode').value;
+          const deadline = document.getElementById('deadline').value;
+          const notes = document.getElementById('note').value;
+
+          const btn = document.getElementById("createBtn");
+          const loading = document.getElementById("loading");
+
+          // Hiện loading, disable nút
+          btn.disabled = true;
+          loading.style.display = "block";
+
+          google.script.run
+            .withSuccessHandler(function(link) {
+              document.getElementById("link").innerText = link;
+
+              // Ẩn loading, enable nút
+              btn.disabled = false;
+              loading.style.display = "none";
+            })
+            .withFailureHandler(function(error) {
+              alert("Error: " + error.message);
+
+              // Ẩn loading, enable nút
+              btn.disabled = false;
+              loading.style.display = "none";
+            })
+            .buildForm(subject, classCode, deadline, notes);
+        }
+
+      // copy link
+      function copy_link() {
+        const text = document.getElementById("link").innerText;
+        navigator.clipboard.writeText(text);
+
+        const copyBtn = document.getElementById("copyBtn");
+        const status = document.getElementById("status");
+
+        copyBtn.classList.remove("btn-outline");
+        copyBtn.classList.add("btn-success");
+        copyBtn.innerHTML = '<i class="fa fa-check"></i>';
+
+        status.style.display = "inline";
+
+        setTimeout(() => {
+          copyBtn.classList.remove("btn-success");
+          copyBtn.classList.add("btn-outline");
+          copyBtn.innerHTML = '<i class="fa fa-copy"></i>';
+          status.style.display = "none";
+        }, 2000);
+      }
+
+      // download the class list
+      function download_class_list () {
+        
+      }
+    </script>
+  </body>
+</html>

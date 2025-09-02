@@ -1,5 +1,5 @@
 function mainFormBuilder () {
-  var html = HtmlService.createHtmlOutputFromFile('sidebar_ui') // ref: sidebar_ui.html
+  var html = HtmlService.createHtmlOutputFromFile('formBuilderUI') // ref: formBuilderUI.html
     .setTitle (' ')
     .setWidth (300)
   SpreadsheetApp.getUi().showSidebar(html);

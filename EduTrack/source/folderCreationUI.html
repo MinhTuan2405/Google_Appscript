@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body { font-family: Arial; padding: 10px; }
+      input, button { margin: 5px 0; width: 100%; }
+      .subfolder { display: flex; margin-bottom: 5px; }
+      .subfolder input { flex: 1; }
+    </style>
+  </head>
+  <body>
+    <h3>Create Folder Structure</h3>
+
+    <label>Parent Folder Name:</label>
+    <input type="text" id="parentName" placeholder="Enter parent folder name">
+
+    <div id="subfoldersContainer">
+      <div class="subfolder">
+        <input type="text" placeholder="Subfolder name">
+      </div>
+    </div>
+
+    <button onclick="addLevel()">+ Create New Level</button>
+    <button onclick="createFolders()">Create</button>
+
+    <p id="result"></p>
+
+    <script>
+      function addLevel() {
+        const container = document.getElementById('subfoldersContainer');
+        const div = document.createElement('div');
+        div.className = 'subfolder';
+        div.innerHTML = '<input type="text" placeholder="Subfolder name">';
+        container.appendChild(div);
+      }
+
+      function createFolders() {
+        const parentName = document.getElementById('parentName').value;
+        const inputs = document.querySelectorAll('#subfoldersContainer input');
+        const subfolders = Array.from(inputs).map(i => i.value.trim()).filter(v => v.length > 0);
+
+        google.script.run.withSuccessHandler(msg => {
+          document.getElementById('result').innerText = msg;
+        }).createFolderStructure(parentName, subfolders);
+      }
+    </script>
+  </body>
+</html>
+
