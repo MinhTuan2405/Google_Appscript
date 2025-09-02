@@ -75,12 +75,6 @@ function buildForm(subject, classCode, deadline, notes) {
   const responseFile = DriveApp.getFileById(responseSs.getId());
   responseFile.moveTo(formFolder);
 
-  // --- Create trigger for syncing ---
-  ScriptApp.newTrigger("syncToClassList")
-    .forSpreadsheet(responseSs)
-    .onFormSubmit()
-    .create();
-
   // --- Write log ---
   let logSheet = ss.getSheetByName("logs");
   if (!logSheet) {
@@ -93,35 +87,72 @@ function buildForm(subject, classCode, deadline, notes) {
   return publishUrl; // return form link
 }
 
-
-function syncToClassList(e) {
-  const appSs = SpreadsheetApp.getActiveSpreadsheet(); // root spreadsheet
-  let targetSheet = appSs.getSheetByName("classList");
-  if (!targetSheet) {
-    targetSheet = appSs.insertSheet("classList");
-  }
-
-  // --- Copy header if empty ---
-  if (targetSheet.getLastRow() === 0) {
-    // e.values chưa có header, nên lấy từ form responses sheet đầu tiên
-    const formResponsesId = e.source.getId();
-    const responseSheet = SpreadsheetApp.openById(formResponsesId).getSheets()[0];
-    const headers = responseSheet.getRange(1, 1, 1, responseSheet.getLastColumn()).getValues()[0];
-    targetSheet.appendRow(headers);
-  }
-
-  // --- Append new data ---
-  targetSheet.appendRow(e.values);
-}
-
-
-
 //////////////
-syncData
+// syncData
 ///////////////
-function syncData () {
+function manualSync() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
   
+  // --- Ensure classList sheet exists ---
+  let targetSheet = ss.getSheetByName("classList");
+  if (!targetSheet) {
+    targetSheet = ss.insertSheet("classList");
+  } else {
+    targetSheet.clear(); // optional: clear previous content
+  }
+
+  // --- Find temp folder ---
+  const appFile = DriveApp.getFileById(ss.getId());
+  const parentFolder = appFile.getParents().hasNext() ? appFile.getParents().next() : DriveApp.getRootFolder();
+  const tempFolders = parentFolder.getFoldersByName("temp");
+  if (!tempFolders.hasNext()) {
+    SpreadsheetApp.getUi().alert("Folder 'temp' not found");
+    return;
+  }
+  const tempFolder = tempFolders.next();
+
+  // --- Loop through all subfolders (forms) ---
+  const subfolders = tempFolder.getFolders();
+  let headersSet = false;
+
+  while (subfolders.hasNext()) {
+    const formFolder = subfolders.next();
+    const files = formFolder.getFilesByType(MimeType.GOOGLE_SHEETS);
+
+    while (files.hasNext()) {
+      const responseFile = files.next();
+      const responseSs = SpreadsheetApp.openById(responseFile.getId());
+      const responseSheet = responseSs.getSheets()[0];
+      const data = responseSheet.getDataRange().getValues();
+
+      if (data.length > 1) {
+        // --- Set header if not yet ---
+        if (!headersSet) {
+          const formHeaders = data[0]; // header from response sheet
+          targetSheet.appendRow(["Class Name", ...formHeaders]);
+          targetSheet.getRange(1, 1, 1, 15).setFontWeight("bold").setBackground("#d9ead3");
+          headersSet = true;
+        }
+
+        // --- Append data rows ---
+        for (let i = 1; i < data.length; i++) {
+          const row = data[i];
+          // Get class name from form title (response sheet name: "Responses - {ClassName}")
+          let className = responseSs.getName();
+          const clsNames = className.split ('-')
+          className = clsNames[clsNames.length-1]
+          targetSheet.appendRow([className, ...row]);
+        }
+      }
+    }
+  }
+
+  SpreadsheetApp.getUi().alert("Sync complete!");
 }
+
+
+
+
 
 
 

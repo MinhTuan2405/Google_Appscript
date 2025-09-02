@@ -9,7 +9,7 @@ function onOpen () {
 
     .addSubMenu (ui.createMenu ("Form") // ref: Form.gs
                   .addItem ('Form Creation', 'mainFormBuilder') 
-                  .addItem ('Sync Result', 'syncData')
+                  .addItem ('Sync Result', 'manualSync')
                   .addItem ('Download class list', 'downloalClassList')) 
     .addSeparator ()
 
