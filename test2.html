@@ -183,7 +183,7 @@
   <div id="patternResult"></div>
 
   <div id="resultMenu">
-    <button onclick="generateFolder()">Generate</button>
+    <button onclick="generatePattern ()">Generate</button>
   </div>
 
   <script>
@@ -191,7 +191,7 @@
     const classSelect = document.getElementById('classSelect');
 
     function renderClassDropdown() {
-      google.script.run.withSuccessHandler(function(classList) {
+        classList = ['classA', 'classB', 'classC']
         classSelect.innerHTML = '<option value="">Select Class</option>';
         classList.forEach(cls => {
           const option = document.createElement('option');
@@ -199,7 +199,6 @@
           option.textContent = cls;
           classSelect.appendChild(option);
         });
-      }).getAllClasses(); 
     }
 
     renderClassDropdown();
@@ -259,64 +258,53 @@
     }
 
     function formatPattern(folders, prefix = '') {
-      let text = '';
-      let obj = [];
+        let text = '';
+        let obj = [];
 
-      folders.forEach((f, index) => {
-          const isLast = index === folders.length - 1;
-          const branch = prefix + (isLast ? '└─ ' : '├─ ');
+        folders.forEach((f, index) => {
+            const isLast = index === folders.length - 1;
+            const branch = prefix + (isLast ? '└─ ' : '├─ ');
 
-          if (f.name) {
-          text += branch + f.name + '\n';
-          }
+            if (f.name) {
+            text += branch + f.name + '\n';
+            }
 
-          let childrenResult = formatPattern(f.children, prefix + (isLast ? '   ' : '│  '));
+            let childrenResult = formatPattern(f.children, prefix + (isLast ? '   ' : '│  '));
 
-          obj.push({
-          name: f.name,
-          children: childrenResult.obj
-          });
+            obj.push({
+            name: f.name,
+            children: childrenResult.obj
+            });
 
-          text += childrenResult.text;
-      });
+            text += childrenResult.text;
+        });
 
-      return { text, obj };
+        return { text, obj };
     }
 
 
     function showPattern() {
-       const selectedClass = classSelect.value;
-       if(!selectedClass) return;
+        const selectedClass = classSelect.value;
+        if(!selectedClass) return;
 
-       const folders = collectFolders(rootsContainer);
-       const result = formatPattern(folders);
+        const folders = collectFolders(rootsContainer);
+        const result = formatPattern(folders);
 
-       // Chuỗi dạng cây
-       let patternText = `Class: ${selectedClass}\n`;
-       patternText += result.text || 'No folders defined.';
-       document.getElementById('patternResult').innerText = patternText;
+        // Chuỗi dạng cây
+        let patternText = `Class: ${selectedClass}\n`;
+        patternText += result.text || 'No folders defined.';
+        document.getElementById('patternResult').innerText = patternText;
 
-       // Object JSON
-       console.log("JSON:", JSON.stringify(result.obj, null, 2));
+        // Object JSON
+
+        console.log (result.obj)
+        console.log("JSON:", JSON.stringify(result.obj, null, 2));
     }
 
 
-    function generateFolder() {
-      const classname = document.getElementById('classSelect').value;
-      const folders = collectFolders(rootsContainer);   // <- cần dòng này
-      const result = formatPattern(folders);           // { text, obj }
+    function generatePattern () {
 
-      google.script.run
-        .withSuccessHandler(function () {
-          return;
-        })
-        .createFolderStructureInSheet(
-          classname,              
-          JSON.stringify(JSON.stringify(result.obj)) 
-        );
     }
-
-
   </script>
 </body>
 </html>
