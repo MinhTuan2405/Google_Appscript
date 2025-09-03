@@ -3,7 +3,7 @@ function onOpen () {
   let ui = SpreadsheetApp.getUi ()
   
   // whole menu
-  ui.createMenu ('🛠️Tools')
+  ui.createMenu ('EduTrack')
     .addItem ('About Our Products', 'Production_information') // ref: product_information.gs
     .addSeparator ()
 
@@ -14,8 +14,8 @@ function onOpen () {
     .addSeparator ()
 
     .addSubMenu (ui.createMenu ("Folder") // ref: Folder.gs
-                  .addItem('Open Folder Creator', 'showSidebar')
-                  .addItem ('Create folder', 'createFolder'))
+                  .addItem('Open Folder Creator', 'showFolderCreatorSidebar')
+                  .addItem ('Change Folder Structure', 'showChangeFolderStructureSidebar'))
     .addSeparator ()
 
     .addSubMenu (ui.createMenu ('Application') // ref: Application.gs
@@ -23,7 +23,11 @@ function onOpen () {
                   .addItem ('Clear Sheet', 'clearSheet'))
     .addSeparator ()
 
-    // testing 
+
+    .addItem ('Update Permissions', 'updatePerrmissions')
+    .addSeparator ()
+
+
     // hihi
     // end create menu process
     .addToUi ()

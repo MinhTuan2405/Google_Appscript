@@ -1,6 +1,6 @@
-function showSidebar() {
+function showFolderCreatorSidebar() {
   const html = HtmlService.createHtmlOutputFromFile('folderCreationUI') // ref: folderCreationUI
-    .setTitle('Folder Pattern Creator');
+    .setTitle('Folder Creator');
   SpreadsheetApp.getUi().showSidebar(html);
 }
 
@@ -26,5 +26,14 @@ function getAllClasses() {
   res.forEach(item => Logger.log(item));
 
   return res;
+}
+
+
+/////////////////////////////////////////////
+function showChangeFolderStructureSidebar () {
+  const html = HtmlService.createHtmlOutputFromFile ('changeFolderStructureUI') // ref: changeFolderStructureUI.html
+      .setTitle ('Change Folder Structure')
+
+  SpreadsheetApp.getUi ().showSidebar (html);
 }
 
