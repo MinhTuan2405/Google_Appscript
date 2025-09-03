@@ -142,19 +142,49 @@
     overflow-y: auto;
     box-shadow: inset 0 0 4px rgba(60,64,67,0.1);
   }
+
+  #resultMenu {
+    margin-top: 12px;
+  }
+
+  #resultMenu button {
+    background: #1a73e8;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  #resultMenu button:hover {
+    background: #1558b0;
+    transform: translateY(-1px);
+  }
+
+  #resultMenu button:active {
+    transform: translateY(0);
+    background: #0d3f7a;
+  }
+
 </style>
 </head>
 <body>
   <div class="top-buttons">
     <select id="classSelect">
-      <option value="">Loading classes...</option>
+      <option value="">Loading...</option>
     </select>
     <button onclick="addFolder(null)">+ Root</button>
-    <button onclick="showPattern()">Tree</button>
+    <button onclick="showPattern()">Preview</button>
   </div>
 
   <div id="rootsContainer"></div>
   <div id="patternResult"></div>
+
+  <div id="resultMenu">
+    <button onclick="generatePattern ()">Generate pattern</button>
+  </div>
 
   <script>
     const rootsContainer = document.getElementById('rootsContainer');
@@ -245,13 +275,16 @@
     function showPattern() {
       const selectedClass = classSelect.value;
       if(!selectedClass) {
-        alert("Please select a class first!");
         return;
       }
       const folders = collectFolders(rootsContainer);
       let patternText = `Class: ${selectedClass}\n`;
       patternText += formatPattern(folders) || 'No folders defined.';
       document.getElementById('patternResult').innerText = patternText;
+    }
+
+    function generatePattern () {
+        
     }
   </script>
 </body>

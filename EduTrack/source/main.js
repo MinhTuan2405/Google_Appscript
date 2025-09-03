@@ -18,6 +18,11 @@ function onOpen () {
                   .addItem ('Create folder', 'createFolder'))
     .addSeparator ()
 
+    .addSubMenu (ui.createMenu ('Application') // ref: Application.gs
+                  .addItem ('Clear Cache', 'clearCache')
+                  .addItem ('Clear Sheet', 'clearSheet'))
+    .addSeparator ()
+
     // testing 
     // hihi
     // end create menu process
