@@ -28,62 +28,39 @@ function getAllClasses() {
   return res;
 }
 
-const jsonstr = `
-[
-  {
-    "name": "lab01",
-    "children": [
-      {
-        "name": "demo1",
-        "children": [
-          {
-            "name": "ass1",
-            "children": []
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "name": "lab02",
-    "children": [
-      {
-        "name": "demo2",
-        "children": []
-      }
-    ]
-  }
-]
-`
+function createClassDrive(inputClassname, jsonstr) {
+  // const classname = "classA"; 
+  // const groups = ["group01", "group02"]; // initial groups
+  // const data = [
+  //   {
+  //     "name": "lab01",
+  //     "children": [
+  //       {
+  //         "name": "demo1",
+  //         "children": [
+  //           {
+  //             "name": "ass1",
+  //             "children": []
+  //           }
+  //         ]
+  //       }
+  //     ]
+  //   },
+  //   {
+  //     "name": "lab02",
+  //     "children": [
+  //       {
+  //         "name": "demo2",
+  //         "children": []
+  //       }
+  //     ]
+  //   }
+  // ];
 
-function createClassDrive() {
-  const classname = "classA"; 
-  const groups = ["group01", "group02"]; // initial groups
-  const data = [
-    {
-      "name": "lab01",
-      "children": [
-        {
-          "name": "demo1",
-          "children": [
-            {
-              "name": "ass1",
-              "children": []
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "lab02",
-      "children": [
-        {
-          "name": "demo2",
-          "children": []
-        }
-      ]
-    }
-  ];
+  const classname = inputClassname;
+  const data = JSON.parse (jsonstr)
+
+  
 
   const parentFolder = getSpreadsheetParent();
 
