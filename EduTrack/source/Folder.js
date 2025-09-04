@@ -50,40 +50,63 @@ function getAllGroupOfClass(classname = 'COMP1314') {
   return res;
 }
 
+function getGroupMembers (classname='IE106', groupname='CNPM') {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet ().getSheetByName ('classList')
+  if (!sheet) return [];
+
+  const lastRow = sheet.getLastRow ();
+  if (lastRow < 2) return [];
+
+  const data = sheet.getRange (2, 1, lastRow - 1, 14).getValues ();
+
+  const emailsGroup = data
+                      .filter (row => row[0] == classname && row[1] == groupname)
+                      .map (row => {
+                        return [row[4], // leader
+                                row[7], // member 1
+                                row[10], // member 2
+                                row[13]] // member 3
+                      })
+                      
+  Logger.log (emailsGroup[0])
+
+  return emailsGroup[0].length > 0 ? emailsGroup[0] : []
+}
+
 
 function createClassDrive(inputClassname, obj) {
-  // const classname = "classA"; 
-  // const groups = ["group01", "group02"]; // initial groups
-  // const data = [
-  //   {
-  //     "name": "lab01",
-  //     "children": [
-  //       {
-  //         "name": "demo1",
-  //         "children": [
-  //           {
-  //             "name": "ass1",
-  //             "children": []
-  //           }
-  //         ]
-  //       }
-  //     ]
-  //   },
-  //   {
-  //     "name": "lab02",
-  //     "children": [
-  //       {
-  //         "name": "demo2",
-  //         "children": []
-  //       }
-  //     ]
-  //   }
-  // ];
+  const classname = "classA"; 
+  const groups = ["group01"]; // initial groups
+  const data = [
+    {
+      "name": "lab01",
+      "children": [
+        {
+          "name": "demo1",
+          "children": [
+            {
+              "name": "ass1",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lab02",
+      "children": [
+        {
+          "name": "demo2",
+          "children": []
+        }
+      ]
+    }
+  ];
 
-  const classname = inputClassname;
-  const data = obj
+  // const classname = inputClassname;
+  // const data = obj
 
-  const groups = getAllGroupOfClass (classname);
+  // const groups = getAllGroupOfClass (classname);
 
   const parentFolder = getSpreadsheetParent();
 
@@ -134,11 +157,133 @@ function addGroupToClass(classname, groupName) {
     Logger.log("Group " + groupName + " already exists, skipped copy");
   }
 
+  // === Apply permissions for this group ===
+  // const members = getGroupMembers(classname, groupName);
+  const members = ['nhungpth.cnthongtin@gmail.com', '23521718@gm.uit.edu.vn']
+  applyGroupPermissions(groupFolder, members);
+
   // Return ID tree
   const ids = collectFolderIds(groupFolder)
   Logger.log (ids)
   return ids;
 }
+
+/**
+ * === PERMISSIONS HANDLING ===
+ */
+// function applyGroupPermissions(folder, groupMembers) {
+//   // 1. Reset link-sharing: restricted
+//   folder.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
+
+//   // 2. Remove any old editors/viewers
+//   removeNonOwnerPermissions(folder);
+
+//   // 3. Grant fresh permissions
+//   groupMembers.forEach(email => {
+//     if (email) {
+//       try {
+//         folder.addEditor(email);
+//       } catch (e) {
+//         Logger.log("Failed to add " + email + ": " + e.message);
+//       }
+//     }
+//   });
+
+//   // 4. Recurse for subfolders
+//   const subfolders = folder.getFolders();
+//   while (subfolders.hasNext()) {
+//     applyGroupPermissions(subfolders.next(), groupMembers);
+//   }
+// }
+
+
+// /**
+//  * Remove all editors and viewers except the owner
+//  */
+// function removeNonOwnerPermissions(folder) {
+//   const file = DriveApp.getFileById(folder.getId());
+
+//   // Remove all editors
+//   file.getEditors().forEach(user => {
+//     try {
+//       file.removeEditor(user);
+//     } catch (e) {
+//       Logger.log("Cannot remove editor " + user.getEmail() + ": " + e.message);
+//     }
+//   });
+
+//   // Remove all viewers
+//   file.getViewers().forEach(user => {
+//     try {
+//       file.removeViewer(user);
+//     } catch (e) {
+//       Logger.log("Cannot remove viewer " + user.getEmail() + ": " + e.message);
+//     }
+//   });
+// }
+
+
+/**
+ * === PERMISSIONS HANDLING (No Email, Drive API) ===
+ * Requires Advanced Drive Service enabled: Resources → Advanced Google Services → Drive API
+ */
+function applyGroupPermissions(folder, groupMembers) {
+   // 1. Reset link-sharing: restricted
+  folder.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
+  const folderId = folder.getId();
+
+  // 1. Remove all permissions except owner
+  removeNonOwnerPermissions(folderId);
+
+  // 2. Grant fresh permissions (no email)
+  groupMembers.forEach(email => {
+    if (email) {
+      try {
+        addEditorNoEmail(folderId, email);
+      } catch (e) {
+        Logger.log("Failed to add " + email + ": " + e.message);
+      }
+    }
+  });
+
+  // 3. Recurse for subfolders
+  const subfolders = folder.getFolders();
+  while (subfolders.hasNext()) {
+    applyGroupPermissions(subfolders.next(), groupMembers);
+  }
+}
+
+/**
+ * Remove all editors and viewers except the owner
+ */
+function removeNonOwnerPermissions(folderId) {
+  const file = Drive.Files.get(folderId, { fields: 'owners,permissions(id,type,emailAddress,role)' });
+  const ownerEmails = file.owners.map(o => o.emailAddress);
+  const permissions = file.permissions || [];
+
+  permissions.forEach(p => {
+    if (p.type === 'user' && p.emailAddress && !ownerEmails.includes(p.emailAddress)) {
+      try {
+        Drive.Permissions.remove(folderId, p.id);
+      } catch (e) {
+        Logger.log("Cannot remove " + p.emailAddress + ": " + e.message);
+      }
+    }
+  });
+}
+
+/**
+ * Add editor without sending email
+ */
+function addEditorNoEmail(fileId, email) {
+  const permission = {
+    'type': 'user',
+    'role': 'writer',
+    'emailAddress': email
+  };
+  Drive.Permissions.create(permission, fileId, { sendNotificationEmail: false });
+}
+
 
 /**
  * Recursively collect IDs of a folder and its subfolders
