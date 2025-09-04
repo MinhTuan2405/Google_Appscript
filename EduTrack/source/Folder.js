@@ -56,20 +56,153 @@ const jsonstr = `
 ]
 `
 
-function createFolderStructure (classname, jsontr) {
-  obj = JSON.parse (jsonstr)
+function createClassDrive() {
+  const classname = "classA"; 
+  const groups = ["group01", "group02"]; // initial groups
+  const data = [
+    {
+      "name": "lab01",
+      "children": [
+        {
+          "name": "demo1",
+          "children": [
+            {
+              "name": "ass1",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lab02",
+      "children": [
+        {
+          "name": "demo2",
+          "children": []
+        }
+      ]
+    }
+  ];
 
-  
+  const parentFolder = getSpreadsheetParent();
 
-  const ss = SpreadsheetApp.getActiveSpreadsheet ()
-  let folderSheet = ss.getSheetByName ('Folder Structure')
+  // === Step 1: temp/classA/_template ===
+  let tempFolder = getOrCreateFolder(parentFolder, "temp");
+  let classFolder = getOrCreateFolder(tempFolder, classname);
+  let templateFolder = getOrCreateFolder(classFolder, "_template");
 
-  if (!folderSheet) {
-    ss.insertSheet ('Folder Structure')
-    folderSheet = ss.getSheetByName ('Folder Structure')
+  // Build template once if empty
+  if (!templateFolder.getFolders().hasNext() && !templateFolder.getFiles().hasNext()) {
+    createFolders(data, templateFolder);
   }
+
+  // === Step 2: userprofile/groups ===
+  groups.forEach(group => {
+    let ids = addGroupToClass(classname, group);
+    Logger.log(JSON.stringify(ids, null, 2)); // log ID tree of group
+  });
 }
 
+/**
+ * Add a new group into an existing class
+ * - classname: e.g. "classA"
+ * - groupName: e.g. "group05"
+ */
+function addGroupToClass(classname='classA', groupName='demo') {
+  const parentFolder = getSpreadsheetParent();
+
+  // === Find template: temp/classA/_template ===
+  let tempFolder = getOrCreateFolder(parentFolder, "temp");
+  let classFolder = getOrCreateFolder(tempFolder, classname);
+  let templateFolders = classFolder.getFoldersByName("_template");
+  if (!templateFolders.hasNext()) {
+    throw new Error("No _template folder found for " + classname);
+  }
+  let templateFolder = templateFolders.next();
+
+  // === userprofile/groupName ===
+  let userProfileFolder = getOrCreateFolder(parentFolder, "userprofile");
+  let classProfileFolder = getOrCreateFolder (userProfileFolder, classname)
+  let groupFolder = getOrCreateFolder(classProfileFolder, groupName);
+
+  // If empty, copy template into it
+  if (!groupFolder.getFolders().hasNext() && !groupFolder.getFiles().hasNext()) {
+    copyContents(templateFolder, groupFolder);
+    Logger.log("Created new group: " + groupName);
+  } else {
+    Logger.log("Group " + groupName + " already exists, skipped copy");
+  }
+
+  // Return ID tree
+  const ids = collectFolderIds(groupFolder)
+  Logger.log (ids)
+  return ids;
+}
+
+/**
+ * Recursively collect IDs of a folder and its subfolders
+ * returns { name, id, children: [] }
+ */
+function collectFolderIds(folder) {
+  let children = [];
+  const subfolders = folder.getFolders();
+  while (subfolders.hasNext()) {
+    const sub = subfolders.next();
+    children.push(collectFolderIds(sub));
+  }
+  return { name: folder.getName(), id: folder.getId(), children: children };
+}
+
+
+/**
+ * Utility: get parent folder of spreadsheet (or root)
+ */
+function getSpreadsheetParent() {
+  const ssFile = DriveApp.getFileById(SpreadsheetApp.getActive().getId());
+  const parents = ssFile.getParents();
+  return parents.hasNext() ? parents.next() : DriveApp.getRootFolder();
+}
+
+/**
+ * Utility: get or create subfolder
+ */
+function getOrCreateFolder(parent, name) {
+  let folders = parent.getFoldersByName(name);
+  return folders.hasNext() ? folders.next() : parent.createFolder(name);
+}
+
+/**
+ * Create folder structure from JSON
+ */
+function createFolders(nodes, parent) {
+  nodes.forEach(node => {
+    let folder = parent.createFolder(node.name);
+    if (node.children && node.children.length > 0) {
+      createFolders(node.children, folder);
+    }
+  });
+}
+
+/**
+ * Copy folder contents recursively
+ */
+function copyContents(source, target) {
+  // Copy files
+  const files = source.getFiles();
+  while (files.hasNext()) {
+    const file = files.next();
+    file.makeCopy(file.getName(), target);
+  }
+
+  // Copy subfolders
+  const subfolders = source.getFolders();
+  while (subfolders.hasNext()) {
+    const subfolder = subfolders.next();
+    const newSub = target.createFolder(subfolder.getName());
+    copyContents(subfolder, newSub);
+  }
+}
 
 /////////////////////////////////////////////
 function showChangeFolderStructureSidebar () {
