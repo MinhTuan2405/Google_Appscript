@@ -28,7 +28,30 @@ function getAllClasses() {
   return res;
 }
 
-function createClassDrive(inputClassname, jsonstr) {
+function getAllGroupOfClass(classname = 'COMP1314') {
+  const sheet = SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName('classList');
+
+  if (!sheet) return [];
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return []; 
+
+  const data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
+
+  const cleanedData = data
+    .filter(row => row[0] === classname) 
+    .map(row => row[1])                 
+    .filter(val => val);                 
+    
+  const distinctSet = new Set(cleanedData);
+  const res = Array.from(distinctSet);
+  return res;
+}
+
+
+function createClassDrive(inputClassname, obj) {
   // const classname = "classA"; 
   // const groups = ["group01", "group02"]; // initial groups
   // const data = [
@@ -58,9 +81,9 @@ function createClassDrive(inputClassname, jsonstr) {
   // ];
 
   const classname = inputClassname;
-  const data = JSON.parse (jsonstr)
+  const data = obj
 
-  
+  const groups = getAllGroupOfClass (classname);
 
   const parentFolder = getSpreadsheetParent();
 

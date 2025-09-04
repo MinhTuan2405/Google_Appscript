@@ -168,6 +168,46 @@
     background: #0d3f7a;
   }
 
+  #loadingOverlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    font-size: 15px;
+    color: #1a73e8;
+    font-weight: 500;
+  }
+
+  .spinner {
+    border: 4px solid #e0e0e0;
+    border-top: 4px solid #1a73e8;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+  }
+
+  #statusMessage {
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  #statusMessage.success {
+    color: #188038; /* xanh lá */
+  }
+  #statusMessage.error {
+    color: #d93025; /* đỏ */
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
 </style>
 </head>
 <body>
@@ -184,8 +224,15 @@
 
   <div id="resultMenu">
     <button onclick="generateFolder()">Generate</button>
+    <div id="statusMessage"></div>
   </div>
 
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    Creating folders, please wait...
+  </div>
+
+  
   <script>
     const rootsContainer = document.getElementById('rootsContainer');
     const classSelect = document.getElementById('classSelect');
@@ -303,19 +350,32 @@
 
     function generateFolder() {
       const classname = document.getElementById('classSelect').value;
-      const folders = collectFolders(rootsContainer);   // <- cần dòng này
-      const result = formatPattern(folders);           // { text, obj }
+      if (!classname) return;
+
+      const folders = collectFolders(rootsContainer);
+      const result = formatPattern(folders);
+
+      // Hiện loading overlay
+      document.getElementById('loadingOverlay').style.display = 'flex';
+
+      // Clear old message
+      const statusEl = document.getElementById('statusMessage');
+      statusEl.textContent = '';
+      statusEl.className = '';
 
       google.script.run
         .withSuccessHandler(function () {
-          return;
+          document.getElementById('loadingOverlay').style.display = 'none';
+          statusEl.textContent = "✅ Folders created successfully!";
+          statusEl.className = "success";
         })
-        .createFolderStructureInSheet(
-          classname,              
-          JSON.stringify(JSON.stringify(result.obj)) 
-        );
+        .withFailureHandler(function (err) {
+          document.getElementById('loadingOverlay').style.display = 'none';
+          statusEl.textContent = "❌ Error: " + err.message;
+          statusEl.className = "error";
+        })
+        .createClassDrive(classname, result.obj);
     }
-
 
   </script>
 </body>

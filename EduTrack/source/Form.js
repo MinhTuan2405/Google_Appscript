@@ -59,9 +59,11 @@ function buildForm(subject, classCode, deadline, notes) {
   const folders = parentFolder.getFoldersByName("temp");
   tempFolder = folders.hasNext() ? folders.next() : parentFolder.createFolder("temp");
 
+  const formtempFolder = getOrCreateFolder (tempFolder, '_form_temp_')
+
   // --- Create a subfolder for this form ---
   const timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd_HHmm");
-  const formFolder = tempFolder.createFolder(formId + "_" + timestamp);
+  const formFolder = formtempFolder.createFolder(formId + "_" + timestamp);
 
   // --- Move form into the subfolder ---
   const formFile = DriveApp.getFileById(formId);
@@ -104,15 +106,11 @@ function manualSync() {
   // --- Find temp folder ---
   const appFile = DriveApp.getFileById(ss.getId());
   const parentFolder = appFile.getParents().hasNext() ? appFile.getParents().next() : DriveApp.getRootFolder();
-  const tempFolders = parentFolder.getFoldersByName("temp");
-  if (!tempFolders.hasNext()) {
-    SpreadsheetApp.getUi().alert("Folder 'temp' not found");
-    return;
-  }
-  const tempFolder = tempFolders.next();
+  const tempFolder = getOrCreateFolder(parentFolder, "temp");
+  const formFolder = getOrCreateFolder(tempFolder, "_form_temp_");
 
-  // --- Loop through all subfolders (forms) ---
-  const subfolders = tempFolder.getFolders();
+  const subfolders = formFolder.getFolders();
+
   let headersSet = false;
 
   while (subfolders.hasNext()) {
