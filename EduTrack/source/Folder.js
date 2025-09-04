@@ -109,7 +109,7 @@ function createClassDrive(inputClassname, obj) {
  * - classname: e.g. "classA"
  * - groupName: e.g. "group05"
  */
-function addGroupToClass(classname='classA', groupName='demo') {
+function addGroupToClass(classname, groupName) {
   const parentFolder = getSpreadsheetParent();
 
   // === Find template: temp/classA/_template ===
