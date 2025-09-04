@@ -28,16 +28,45 @@ function getAllClasses() {
   return res;
 }
 
+const jsonstr = `
+[
+  {
+    "name": "lab01",
+    "children": [
+      {
+        "name": "demo1",
+        "children": [
+          {
+            "name": "ass1",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "lab02",
+    "children": [
+      {
+        "name": "demo2",
+        "children": []
+      }
+    ]
+  }
+]
+`
 
 function createFolderStructure (classname, jsontr) {
+  obj = JSON.parse (jsonstr)
+
+  
+
   const ss = SpreadsheetApp.getActiveSpreadsheet ()
   let folderSheet = ss.getSheetByName ('Folder Structure')
 
   if (!folderSheet) {
     ss.insertSheet ('Folder Structure')
     folderSheet = ss.getSheetByName ('Folder Structure')
-
-
   }
 }
 
