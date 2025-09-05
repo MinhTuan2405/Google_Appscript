@@ -5,7 +5,6 @@ function showFolderCreatorSidebar() {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-
 function writeClassTree(classname, obj) {
   if (!obj || obj.length === 0) return;
 
@@ -104,76 +103,13 @@ function writeClassTree(classname, obj) {
 // }
 
 
-
-function sheetToObjectByClassname(classname='IE107') {
-  if (!classname) return [];
-
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName("Create Folder");
-  if (!sheet) return [];
-
-  const data = sheet.getDataRange().getValues();
-  if (data.length < 2) return [];
-
-  const header = data[0];
-  const classnameCol = header.indexOf("classname");
-  const levelCols = header.map((h, i) => h.startsWith("LEVEL") ? i : -1).filter(i => i !== -1);
-
-  const tree = [];
-  const stack = [];
-  let currentClass = null;
-
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-
-    if (row.every(cell => cell === "")) continue;
-
-    if (row[classnameCol] && row[classnameCol].toString().trim() !== "") {
-      currentClass = row[classnameCol].toString().trim();
-      stack.length = 0; 
-    }
-
-    if (currentClass !== classname) continue; 
-
-    let level = -1;
-    let nodeName = null;
-    for (let j = 0; j < levelCols.length; j++) {
-      const val = row[levelCols[j]];
-      if (val && val.toString().trim() !== "") {
-        level = j;
-        nodeName = val.toString().trim();
-        break;
-      }
-    }
-    if (level === -1) continue;
-
-    const node = { name: nodeName, children: [] };
-
-    if (level === 0) {
-      tree.push(node);
-      stack.length = 0;
-      stack.push(node);
-    } else {
-      const parent = stack[level - 1];
-      if (parent) {
-        parent.children.push(node);
-        stack[level] = node;
-      }
-    }
-  }
-
-  Logger.log(JSON.stringify(tree, null, 2));
-  return tree;
-}
-
-
 //------------------------------------------------------------------
 
 
-function getAllClasses() {
+function getAllClasses(classname = 'Class List') { // default by 'Class List'
   const sheet = SpreadsheetApp
                 .getActiveSpreadsheet()
-                .getSheetByName('classList');
+                .getSheetByName(classname);
 
   if (!sheet) return [];
 
@@ -193,10 +129,10 @@ function getAllClasses() {
   return res;
 }
 
-function getAllGroupOfClass(classname = 'COMP1314') {
+function getAllGroupOfClass(classname) {
   const sheet = SpreadsheetApp
     .getActiveSpreadsheet()
-    .getSheetByName('classList');
+    .getSheetByName('Class List');
 
   if (!sheet) return [];
 
@@ -215,8 +151,8 @@ function getAllGroupOfClass(classname = 'COMP1314') {
   return res;
 }
 
-function getGroupMembers (classname='IE106', groupname='CNPM') {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet ().getSheetByName ('classList')
+function getGroupMembers (classname, groupname) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet ().getSheetByName ('Class List')
   if (!sheet) return [];
 
   const lastRow = sheet.getLastRow ();
@@ -524,5 +460,66 @@ function showChangeFolderStructureSidebar () {
       .setTitle ('Change Folder Structure')
 
   SpreadsheetApp.getUi ().showSidebar (html);
+}
+
+function sheetToObjectByClassname(classname='IE107') {
+  if (!classname) return [];
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("Create Folder");
+  if (!sheet) return [];
+
+  const data = sheet.getDataRange().getValues();
+  if (data.length < 2) return [];
+
+  const header = data[0];
+  const classnameCol = header.indexOf("classname");
+  const levelCols = header.map((h, i) => h.startsWith("LEVEL") ? i : -1).filter(i => i !== -1);
+
+  const tree = [];
+  const stack = [];
+  let currentClass = null;
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+
+    if (row.every(cell => cell === "")) continue;
+
+    if (row[classnameCol] && row[classnameCol].toString().trim() !== "") {
+      currentClass = row[classnameCol].toString().trim();
+      stack.length = 0; 
+    }
+
+    if (currentClass !== classname) continue; 
+
+    let level = -1;
+    let nodeName = null;
+    for (let j = 0; j < levelCols.length; j++) {
+      const val = row[levelCols[j]];
+      if (val && val.toString().trim() !== "") {
+        level = j;
+        nodeName = val.toString().trim();
+        break;
+      }
+    }
+    if (level === -1) continue;
+
+    const node = { name: nodeName, children: [] };
+
+    if (level === 0) {
+      tree.push(node);
+      stack.length = 0;
+      stack.push(node);
+    } else {
+      const parent = stack[level - 1];
+      if (parent) {
+        parent.children.push(node);
+        stack[level] = node;
+      }
+    }
+  }
+
+  Logger.log(JSON.stringify(tree, null, 2));
+  return tree;
 }
 

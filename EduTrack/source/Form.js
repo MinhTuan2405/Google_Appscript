@@ -78,9 +78,9 @@ function buildForm(subject, classCode, deadline, notes) {
   responseFile.moveTo(formFolder);
 
   // --- Write log ---
-  let logSheet = ss.getSheetByName("logs");
+  let logSheet = ss.getSheetByName("Form Logger");
   if (!logSheet) {
-    logSheet = ss.insertSheet("logs");
+    logSheet = ss.insertSheet("Form Logger");
     logSheet.appendRow(["Timestamp", "Subject", "Class", "Publish URL", "Edit URL", "Folder URL", "Response Sheet"]);
     logSheet.getRange(1, 1, 1, 7).setFontWeight("bold").setBackground("#d9ead3");
   }
@@ -96,9 +96,9 @@ function manualSync() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   
   // --- Ensure classList sheet exists ---
-  let targetSheet = ss.getSheetByName("classList");
+  let targetSheet = ss.getSheetByName("Class List");
   if (!targetSheet) {
-    targetSheet = ss.insertSheet("classList");
+    targetSheet = ss.insertSheet("Class List");
   } else {
     targetSheet.clear(); // optional: clear previous content
   }
