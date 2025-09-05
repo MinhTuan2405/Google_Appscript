@@ -115,18 +115,15 @@ function sheetToObjectByClassname(classname='it006') {
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
 
-    // Bỏ qua hàng trống hoàn toàn
     if (row.every(cell => cell === "")) continue;
 
-    // Cập nhật currentClass nếu có giá trị
     if (row[classnameCol] && row[classnameCol].toString().trim() !== "") {
       currentClass = row[classnameCol].toString().trim();
-      stack.length = 0; // reset stack cho lớp mới
+      stack.length = 0; 
     }
 
-    if (currentClass !== classname) continue; // bỏ qua các lớp khác
+    if (currentClass !== classname) continue; 
 
-    // Tìm LEVEL có giá trị
     let level = -1;
     let nodeName = null;
     for (let j = 0; j < levelCols.length; j++) {
@@ -142,7 +139,6 @@ function sheetToObjectByClassname(classname='it006') {
     const node = { name: nodeName, children: [] };
 
     if (level === 0) {
-      // node gốc
       tree.push(node);
       stack.length = 0;
       stack.push(node);
