@@ -4,7 +4,9 @@ function showFolderCreatorSidebar() {
   SpreadsheetApp.getUi().showSidebar(html);
 }
 
-function writeClassTree(classname = "it006", obj) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function writeClassTree(classname, obj) {
   if (!obj || obj.length === 0) return;
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -22,24 +24,33 @@ function writeClassTree(classname = "it006", obj) {
   }
   obj.forEach(root => getMaxDepth(root));
 
+  const existingHeader = sheet.getLastRow() > 0 ? sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0] : [];
+  const existingDepth = existingHeader.filter(h => h.startsWith("LEVEL")).length;
+
+  const requiredDepth = Math.max(existingDepth, maxDepth);
+
   const header = ["classname", "groupname"];
-  for (let i = 1; i <= maxDepth; i++) header.push(`LEVEL ${i}`);
-  if (sheet.getLastRow() === 0) {
+  for (let i = 1; i <= requiredDepth; i++) header.push(`LEVEL ${i}`);
+
+  if (existingHeader.length === 0) {
     sheet.getRange(1, 1, 1, header.length)
          .setValues([header])
          .setBackground("#d9ead3")
-         .setFontWeight("bold")
+         .setFontWeight("bold");
+  } else if (requiredDepth > existingDepth) {
+    sheet.getRange(1, 1, 1, header.length).setValues([header])
+          .setBackground("#d9ead3")
+         .setFontWeight("bold");;
   }
 
-  let startRow = 0;
-  const lr = sheet.getLastRow ();
-  if (lr == 1) startRow = lr + 1
+  let startRow = 0; const lr = sheet.getLastRow (); 
+  if (lr == 1) startRow = lr + 1 
   else startRow = lr + 2;
 
   const rows = [];
   let firstRow = true;
   function traverse(node, level = 0) {
-    const row = Array(maxDepth + 2).fill('');
+    const row = Array(requiredDepth + 2).fill('');
     if (firstRow) {
       row[0] = classname;  
       row[1] = "{}";       
@@ -55,46 +66,46 @@ function writeClassTree(classname = "it006", obj) {
 
   obj.forEach(root => traverse(root));
 
-  const range = sheet.getRange(startRow, 1, rows.length, maxDepth + 2);
-  range.setValues(rows);
+  sheet.getRange(startRow, 1, rows.length, requiredDepth + 2).setValues(rows);
 
   sheet.getRange(startRow, 1).setFontWeight("bold");
 }
 
 
 
-function test () {
-  // Test
-  const testObj = [
-    {
-      name: "lab01",
-      children: [
-        { name: "demo1", children: [{ name: "ass1", children: [] }] }
-      ]
-    },
-    {
-      name: "lab02",
-      children: [
-        { name: "demo2", children: [] }
-      ]
-    },
-        {
-      name: "lab03",
-      children: [
-        { name: "demo2", children: [] }
-      ]
-    }
-  ];
 
-  writeClassTree("it006", testObj);
-  writeClassTree ('it007', testObj)
-  writeClassTree ('it008', testObj)
+// function test () {
+//   // Test
+//   const testObj = [
+//     {
+//       name: "lab01",
+//       children: [
+//         { name: "demo1", children: [{ name: "ass1", children: [] }] }
+//       ]
+//     },
+//     {
+//       name: "lab02",
+//       children: [
+//         { name: "demo2", children: [] }
+//       ]
+//     },
+//         {
+//       name: "lab03",
+//       children: [
+//         { name: "demo2", children: [] }
+//       ]
+//     }
+//   ];
 
-}
+//   writeClassTree("it006", testObj);
+//   writeClassTree ('it007', testObj)
+//   writeClassTree ('it008', testObj)
+
+// }
 
 
 
-function sheetToObjectByClassname(classname='it006') {
+function sheetToObjectByClassname(classname='IE107') {
   if (!classname) return [];
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -229,38 +240,38 @@ function getGroupMembers (classname='IE106', groupname='CNPM') {
 
 
 function createClassDrive(inputClassname, obj) {
-  const classname = "classA"; 
-  const groups = ["group01", "group02"]; // initial groups
-  const data = [
-    {
-      "name": "lab01",
-      "children": [
-        {
-          "name": "demo1",
-          "children": [
-            {
-              "name": "ass1",
-              "children": []
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "lab02",
-      "children": [
-        {
-          "name": "demo2",
-          "children": []
-        }
-      ]
-    }
-  ];
+  // const classname = "classA"; 
+  // const groups = ["group01", "group02"]; // initial groups
+  // const data = [
+  //   {
+  //     "name": "lab01",
+  //     "children": [
+  //       {
+  //         "name": "demo1",
+  //         "children": [
+  //           {
+  //             "name": "ass1",
+  //             "children": []
+  //           }
+  //         ]
+  //       }
+  //     ]
+  //   },
+  //   {
+  //     "name": "lab02",
+  //     "children": [
+  //       {
+  //         "name": "demo2",
+  //         "children": []
+  //       }
+  //     ]
+  //   }
+  // ];
 
-  // const classname = inputClassname;
-  // const data = obj
+  const classname = inputClassname;
+  const data = obj
 
-  // const groups = getAllGroupOfClass (classname);
+  const groups = getAllGroupOfClass (classname);
 
   const parentFolder = getSpreadsheetParent();
 
@@ -312,12 +323,12 @@ function addGroupToClass(classname, groupName) {
   }
 
   // === Apply permissions for this group ===
-  // const members = getGroupMembers(classname, groupName);
-  let members = []
-  if (groupName == 'group01')
-    members = ['nhungpth.cnthongtin@gmail.com']
-  else
-    members = ['23521718@gm.uit.edu.vn']
+  const members = getGroupMembers(classname, groupName);
+  // let members = []
+  // if (groupName == 'group01')
+  //   members = ['nhungpth.cnthongtin@gmail.com']
+  // else
+  //   members = ['23521718@gm.uit.edu.vn']
   applyGroupPermissions(groupFolder, members);
 
   // Return ID tree

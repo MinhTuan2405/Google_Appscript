@@ -4,209 +4,236 @@
   <meta charset="UTF-8">
   <title>Folder Pattern Creator</title>
 <style>
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 13px;
-    margin: 0;
-    padding: 12px;
-    background: #f5f5f7;
-    color: #202124;
-    overflow-y: auto;
-  }
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 13px;
+  margin: 0;
+  padding: 12px;
+  background: #f5f5f7;
+  color: #202124;
+  overflow-y: auto;
+}
 
-  h3 {
-    font-size: 17px;
-    font-weight: 600;
-    margin-bottom: 12px;
-  }
+h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
 
-  .top-buttons {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
+/* --- Top bar --- */
+.top-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
 
-  select {
-    font-size: 13px;
-    padding: 4px 6px;
-    border-radius: 4px;
-    border: 1px solid #dadce0;
-    background: #fff;
-  }
+.top-buttons select {
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #dadce0;
+  background: #fff;
+  width: 100%;          
+  min-width: 200px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
 
-  .top-buttons button {
-    background: #ffffff;
-    border: 1px solid #dadce0;
-    padding: 5px 10px;
-    border-radius: 6px;
-    font-size: 13px;
-    cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
-  }
+.top-buttons select:focus {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+}
 
-  .top-buttons button:hover {
-    background: #e8f0fe;
-    border-color: #1a73e8;
-  }
+.top-buttons .button-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
-  .folder {
-    position: relative;
-    padding: 4px 8px;
-    margin: 2px 0;
-    border-radius: 6px;
-    background: #ffffff;
-    transition: background 0.2s;
-  }
+.top-buttons button {
+  background: #f8f9fa;
+  border: 1px solid #dadce0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+}
 
-  .folder:hover {
-    background: #e8f0fe;
-  }
+.top-buttons button:hover {
+  background: #e8f0fe;
+  border-color: #1a73e8;
+}
 
-  .folder-left {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+.top-buttons button:active {
+  transform: scale(0.97);
+  background: #d2e3fc;
+}
 
-  .folder-actions {
-    margin-left: auto;
-    display: flex;
-    gap: 4px;
-  }
 
-  .folder-actions button {
-    border: none;
-    background: transparent;
-    color: #5f6368;
-    cursor: pointer;
-    padding: 2px 4px;
-    font-size: 12px;
-    transition: color 0.2s;
-  }
+/* --- Folder items --- */
+.folder {
+  position: relative;
+  padding: 4px 8px;
+  margin: 2px 0;
+  border-radius: 6px;
+  background: #ffffff;
+  transition: background 0.2s;
+}
 
-  .folder-actions button:hover {
-    color: #1a73e8;
-  }
+.folder:hover {
+  background: #e8f0fe;
+}
 
-  input {
-    font-size: 13px;
-    padding: 2px 4px;
-    border: 1px solid #dadce0;
-    border-radius: 4px;
-    outline: none;
-    background: transparent;
-    transition: border-color 0.2s;
-  }
+.folder-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
-  input:focus {
-    border-color: #1a73e8;
-  }
+.folder-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
 
-  .subfolders {
-    margin-left: 20px;
-    position: relative;
-  }
+.folder-actions button {
+  border: none;
+  background: transparent;
+  color: #5f6368;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 12px;
+  transition: color 0.2s;
+}
 
-  .subfolders::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 10px;
-    width: 1px;
-    height: 100%;
-    background: #cfd8dc;
-  }
+.folder-actions button:hover {
+  color: #1a73e8;
+}
 
-  .subfolders .folder::before {
-    content: '';
-    position: absolute;
-    top: 12px;
-    left: -10px;
-    width: 10px;
-    height: 1px;
-    background: #cfd8dc;
-  }
+input {
+  font-size: 13px;
+  padding: 2px 4px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  outline: none;
+  background: transparent;
+  transition: border-color 0.2s;
+}
 
-  #patternResult {
-    white-space: pre;
-    background: #ffffff;
-    color: #202124;
-    padding: 10px;
-    margin-top: 12px;
-    border-radius: 6px;
-    font-family: monospace;
-    font-size: 12px;
-    max-height: 220px;
-    overflow-y: auto;
-    box-shadow: inset 0 0 4px rgba(60,64,67,0.1);
-  }
+input:focus {
+  border-color: #1a73e8;
+}
 
-  #resultMenu {
-    margin-top: 12px;
-  }
+.subfolders {
+  margin-left: 20px;
+  position: relative;
+}
 
-  #resultMenu button {
-    background: #1a73e8;
-    color: #fff;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-  }
+.subfolders::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10px;
+  width: 1px;
+  height: 100%;
+  background: #cfd8dc;
+}
 
-  #resultMenu button:hover {
-    background: #1558b0;
-    transform: translateY(-1px);
-  }
+.subfolders .folder::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: -10px;
+  width: 10px;
+  height: 1px;
+  background: #cfd8dc;
+}
 
-  #resultMenu button:active {
-    transform: translateY(0);
-    background: #0d3f7a;
-  }
+/* --- Pattern preview box --- */
+#patternResult {
+  white-space: pre;
+  background: #ffffff;
+  color: #202124;
+  padding: 10px;
+  margin-top: 12px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 12px;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: inset 0 0 4px rgba(60,64,67,0.1);
+}
 
-  #loadingOverlay {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(255, 255, 255, 0.8);
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-    font-size: 15px;
-    color: #1a73e8;
-    font-weight: 500;
-  }
+/* --- Result menu --- */
+#resultMenu {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
 
-  .spinner {
-    border: 4px solid #e0e0e0;
-    border-top: 4px solid #1a73e8;
-    border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    animation: spin 1s linear infinite;
-    margin-right: 10px;
-  }
+#resultMenu button {
+  background: #1a73e8;
+  color: #fff;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
 
-  #statusMessage {
-    margin-top: 10px;
-    font-size: 13px;
-    font-weight: 500;
-  }
-  #statusMessage.success {
-    color: #188038; /* xanh lá */
-  }
-  #statusMessage.error {
-    color: #d93025; /* đỏ */
-  }
+#resultMenu button:hover {
+  background: #1558b0;
+  transform: translateY(-1px);
+}
 
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
+#resultMenu button:active {
+  transform: translateY(0);
+  background: #0d3f7a;
+}
+
+#statusMessage {
+  font-size: 13px;
+  font-weight: 500;
+}
+#statusMessage.success {
+  color: #188038; /* xanh lá */
+}
+#statusMessage.error {
+  color: #d93025; /* đỏ */
+}
+
+/* --- Loading overlay --- */
+#loadingOverlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  font-size: 15px;
+  color: #1a73e8;
+  font-weight: 500;
+}
+
+.spinner {
+  border: 4px solid #e0e0e0;
+  border-top: 4px solid #1a73e8;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  animation: spin 1s linear infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 
 </style>
 </head>
@@ -215,8 +242,11 @@
     <select id="classSelect">
       <option value="">Loading...</option>
     </select>
-    <button onclick="addFolder(null)">+ Root</button>
-    <button onclick="showPattern()">Preview</button>
+    <div class="button-row">
+      <button onclick="addFolder(null)">+ Root</button>
+      <button onclick="showPattern()">Preview</button>
+      <button onclick="viewFolders()">View</button>
+    </div>
   </div>
 
   <div id="rootsContainer"></div>
@@ -338,13 +368,9 @@
        const folders = collectFolders(rootsContainer);
        const result = formatPattern(folders);
 
-       // Chuỗi dạng cây
        let patternText = `Class: ${selectedClass}\n`;
        patternText += result.text || 'No folders defined.';
        document.getElementById('patternResult').innerText = patternText;
-
-       // Object JSON
-       console.log("JSON:", JSON.stringify(result.obj, null, 2));
     }
 
 
@@ -355,26 +381,33 @@
       const folders = collectFolders(rootsContainer);
       const result = formatPattern(folders);
 
-      // Hiện loading overlay
-      document.getElementById('loadingOverlay').style.display = 'flex';
-
-      // Clear old message
+      const overlay = document.getElementById('loadingOverlay');
       const statusEl = document.getElementById('statusMessage');
+      overlay.style.display = 'flex';
       statusEl.textContent = '';
       statusEl.className = '';
 
       google.script.run
-        .withSuccessHandler(function () {
-          document.getElementById('loadingOverlay').style.display = 'none';
-          statusEl.textContent = "✅ Folders created successfully!";
-          statusEl.className = "success";
-        })
         .withFailureHandler(function (err) {
-          document.getElementById('loadingOverlay').style.display = 'none';
+          overlay.style.display = 'none';
           statusEl.textContent = "❌ Error: " + err.message;
           statusEl.className = "error";
         })
-        .createClassDrive(classname, result.obj);
+        .withSuccessHandler(function () {
+          google.script.run
+            .withSuccessHandler(function () {
+              overlay.style.display = 'none';
+              statusEl.textContent = "✅ Folders created successfully!";
+              statusEl.className = "success";
+            })
+            .withFailureHandler(function (err) {
+              overlay.style.display = 'none';
+              statusEl.textContent = "❌ Error: " + err.message;
+              statusEl.className = "error";
+            })
+            .createClassDrive(classname, result.obj);
+        })
+        .writeClassTree(classname, result.obj);
     }
 
   </script>
