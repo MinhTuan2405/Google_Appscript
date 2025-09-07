@@ -389,6 +389,18 @@ function addEditorNoEmail(fileId, email) {
   Drive.Permissions.create(permission, fileId, { sendNotificationEmail: false });
 }
 
+///////////////////////////////////////////////////////////////
+function writePermissionsSheet (classname='COMP1314') {
+  const root = getSpreadsheetParent () // root;
+  const userprofile = getOrCreateFolder (root, 'userprofile')
+
+  const classfolder = getOrCreateFolder (userprofile, classname)
+
+  Logger.log (collectFolderIds (classfolder))
+}
+
+////////////////////////////////////////////////////////////////////////////
+
 
 /**
  * Recursively collect IDs of a folder and its subfolders
