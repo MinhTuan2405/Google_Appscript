@@ -151,27 +151,31 @@ function getAllGroupOfClass(classname) {
   return res;
 }
 
-function getGroupMembers (classname, groupname) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet ().getSheetByName ('Class List')
+function getGroupMembers(classname='COMP1314', groupname='Nhóm kia tào lao á') {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Class List');
   if (!sheet) return [];
 
-  const lastRow = sheet.getLastRow ();
+  const lastRow = sheet.getLastRow();
   if (lastRow < 2) return [];
 
-  const data = sheet.getRange (2, 1, lastRow - 1, 14).getValues ();
+  const data = sheet.getRange(2, 1, lastRow - 1, 14).getValues();
 
   const emailsGroup = data
-                      .filter (row => row[0] == classname && row[1] == groupname)
-                      .map (row => {
-                        return [row[4], // leader
-                                row[7], // member 1
-                                row[10], // member 2
-                                row[13]] // member 3
-                      })
-                      
-  Logger.log (emailsGroup[0])
+    .filter(row => row[0] == classname && row[1] == groupname)
+    .map(row => [
+      row[4],  // leader
+      row[7],  // member 1
+      row[10], // member 2
+      row[13]  // member 3
+    ])
+    .flat(); // gộp thành 1 array thay vì [[..]]
 
-  return emailsGroup[0].length > 0 ? emailsGroup[0] : []
+  const cleaned = emailsGroup.filter(e => e && e.toString().trim() !== "");
+
+  Logger.log(`${classname} - ${groupname}: ${JSON.stringify(cleaned)}`);
+  Logger.log (cleaned)
+
+  return cleaned;
 }
 
 
@@ -390,14 +394,336 @@ function addEditorNoEmail(fileId, email) {
 }
 
 ///////////////////////////////////////////////////////////////
-function writePermissionsSheet (classname='COMP1314') {
-  const root = getSpreadsheetParent () // root;
-  const userprofile = getOrCreateFolder (root, 'userprofile')
+// function writePermissionsSheet (classname='COMP1314') {
+//   const root = getSpreadsheetParent () // root;
+//   const userprofile = getOrCreateFolder (root, 'userprofile')
 
-  const classfolder = getOrCreateFolder (userprofile, classname)
+//   const classfolder = getOrCreateFolder (userprofile, classname)
 
-  Logger.log (collectFolderIds (classfolder))
+//   Logger.log (collectFolderIds (classfolder))
+// }
+
+// function writePermissionsSheet(classname = 'COMP1314') {
+//   const ss = SpreadsheetApp.getActiveSpreadsheet();
+//   let sheet = ss.getSheetByName('Permissions');
+//   if (!sheet) sheet = ss.insertSheet('Permissions');
+
+//   // === Build cây folder của class trong userprofile ===
+//   const root = getSpreadsheetParent();
+//   const userprofile = getOrCreateFolder(root, 'userprofile');
+//   const classfolder = getOrCreateFolder(userprofile, classname);
+//   const tree = collectFolderIds(classfolder);
+
+//   // === Tìm depth lớn nhất của cây ===
+//   let maxDepth = 0;
+//   (function getMaxDepth(node, depth = 1) {
+//     maxDepth = Math.max(maxDepth, depth);
+//     if (node.children && node.children.length > 0) {
+//       node.children.forEach(child => getMaxDepth(child, depth + 1));
+//     }
+//   })(tree);
+
+//   // === Header ===
+//   const header = ["classname", "groupname", "Folder ID", "Emails", "Permission"];
+//   for (let i = 1; i < maxDepth; i++) {
+//     header.push(`LEVEL ${i}`, "Folder ID", "Emails", "Permission");
+//   }
+//   sheet.clear();
+//   sheet.getRange(1, 1, 1, header.length)
+//        .setValues([header])
+//        .setBackground("#c9daf8")
+//        .setFontWeight("bold");
+
+//   // === Build rows ===
+//   const rows = [];
+//   const groupEmailsCache = {}; // cache email theo group
+
+//   function traverse(node, depth = 1, groupName = null) {
+//     const row = Array(header.length).fill('');
+
+//     if (depth === 1) {
+//       // cấp 1: group folder
+//       groupName = node.name;
+//       row[0] = classname;
+//       row[1] = groupName;
+//       row[2] = node.id;
+
+//       if (!groupEmailsCache[groupName]) {
+//         groupEmailsCache[groupName] = getGroupMembers(classname, groupName);
+//       }
+//       row[3] = groupEmailsCache[groupName].join(", ");
+//       row[4] = "editor"; // mặc định
+//     }
+
+//     // đặt dữ liệu cho level tương ứng
+//     const colBase = 5 + (depth - 1) * 4;
+//     row[colBase] = node.name || "";
+//     row[colBase + 1] = node.id || "";
+
+//     if (groupName && groupEmailsCache[groupName]) {
+//       row[colBase + 2] = groupEmailsCache[groupName].join(", ");
+//       row[colBase + 3] = "editor"; // mặc định
+//     }
+
+//     rows.push(row);
+
+//     // duyệt con
+//     if (node.children && node.children.length > 0) {
+//       node.children.forEach(child => traverse(child, depth + 1, groupName));
+//     }
+//   }
+
+//   if (tree.children) {
+//     tree.children.forEach(child => traverse(child));
+//   }
+
+//   // === Ghi dữ liệu ===
+//   sheet.getRange(2, 1, rows.length, header.length).setValues(rows);
+
+//   // === Data validation cho Emails ===
+//   const groups = getAllGroupOfClass(classname);
+//   groups.forEach(group => {
+//     const members = getGroupMembers(classname, group);
+//     if (members.length > 0) {
+//       const rule = SpreadsheetApp.newDataValidation()
+//         .requireValueInList(members, true) // danh sách email nhóm
+//         .setAllowInvalid(true)
+//         .build();
+
+//       // gắn cho toàn bộ cột Emails có group đó
+//       const data = sheet.getDataRange().getValues();
+//       for (let r = 1; r < data.length; r++) {
+//         if (data[r][1] === group) {
+//           header.forEach((h, c) => {
+//             if (h === "Emails") {
+//               sheet.getRange(r + 1, c + 1).setDataValidation(rule);
+//             }
+//           });
+//         }
+//       }
+//     }
+//   });
+
+//   // === Permission dropdown (default editor) ===
+//   const permOptions = ["viewer", "editor", "none"];
+//   const permRule = SpreadsheetApp.newDataValidation()
+//     .requireValueInList(permOptions, true)
+//     .setAllowInvalid(false)
+//     .build();
+
+//   header.forEach((h, c) => {
+//     if (h === "Permission") {
+//       const range = sheet.getRange(2, c + 1, rows.length);
+//       range.setDataValidation(permRule);
+//     }
+//   });
+// }
+
+/**
+ * writePermissionsSheet - stable version
+ * - Only lists groups that actually have folders in userprofile/classname
+ * - Computes maxDepth across those group folders first, then builds header
+ * - Ensures each row length === header.length (avoids setValues column mismatch)
+ * - Adds DataValidation for Emails (per group members) and Permission (global)
+ */
+function writePermissionsSheet(classname = 'COMP1314') {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName("Permissions");
+  if (!sheet) sheet = ss.insertSheet("Permissions");
+  else sheet.clear();
+
+  const root = getSpreadsheetParent();
+  const userprofile = getOrCreateFolder(root, "userprofile");
+  const classFolder = getOrCreateFolder(userprofile, classname);
+
+  // 1) Lấy nhóm có folder trong Drive
+  const groupsFromSheet = getAllGroupOfClass(classname);
+  const groupsInfo = [];
+  let globalMaxDepth = 0;
+
+  groupsFromSheet.forEach(group => {
+    const groupIter = classFolder.getFoldersByName(group);
+    if (!groupIter.hasNext()) {
+      Logger.log("Skip group (no folder): " + group);
+      return;
+    }
+    const groupFolder = groupIter.next();
+    const tree = collectFolderIds(groupFolder);
+    const depth = getMaxDepth(tree);
+    globalMaxDepth = Math.max(globalMaxDepth, depth);
+    const members = getGroupMembers(classname, group);
+    groupsInfo.push({ name: group, members: members, tree: tree });
+  });
+
+  if (groupsInfo.length === 0) {
+    sheet.getRange(1, 1).setValue("No groups with folders found for class: " + classname);
+    return;
+  }
+
+  // 2) Header
+  const levelsCount = Math.max(0, globalMaxDepth - 1);
+  const header = ["classname", "groupname", "Folder ID", "Emails", "Permission"];
+  for (let i = 1; i <= levelsCount; i++) {
+    header.push(`LEVEL ${i}`, "Folder ID", "Emails", "Permission");
+  }
+  sheet.getRange(1, 1, 1, header.length).setValues([header])
+       .setBackground("#d9ead3").setFontWeight("bold");
+
+  function levelBaseIndex(level) {
+    return 5 + (level - 1) * 4; // 0-based
+  }
+
+  // 3) Build rows
+  const allRows = [];
+  const rowGroups = []; // để lưu group cho mỗi row (dùng khi set validation)
+
+  groupsInfo.forEach(info => {
+    const members = info.members || [];
+    const membersStr = members.join(", ");
+
+    function traverse(node, level = 0, isRoot = false) {
+      const row = Array(header.length).fill("");
+
+      if (level === 0) {
+        // root row
+        row[0] = classname;
+        row[1] = info.name;
+        row[2] = node.id || "";
+        row[3] = membersStr;
+        row[4] = "editor";
+      } else {
+        // level row
+        const base = levelBaseIndex(level);
+        if (base + 3 < header.length) {
+          row[base] = node.name || "";
+          row[base + 1] = node.id || "";
+          row[base + 2] = membersStr;
+          row[base + 3] = "editor";
+        }
+      }
+
+      allRows.push(row);
+      rowGroups.push(info.name);
+
+      if (node.children && node.children.length > 0) {
+        node.children.forEach(child => traverse(child, level + 1));
+      }
+    }
+
+    traverse(info.tree, 0, true);
+  });
+
+  // 4) Write rows
+  sheet.getRange(2, 1, allRows.length, header.length).setValues(allRows);
+
+  // 5) Indices
+  const emailColIndices = [];
+  const permColIndices = [];
+  for (let i = 0; i < header.length; i++) {
+    if (header[i] === "Emails") emailColIndices.push(i + 1);
+    if (header[i] === "Permission") permColIndices.push(i + 1);
+  }
+
+  // 6) Permission dropdown
+  const permRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(["editor", "viewer", "none"], true)
+    .setAllowInvalid(true)
+    .build();
+  permColIndices.forEach(col => {
+    sheet.getRange(2, col, allRows.length).setDataValidation(permRule);
+  });
+
+  // 7) Email dropdown theo group
+  groupsInfo.forEach(info => {
+    const members = info.members || [];
+    if (!members.length) return;
+    const emailRule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(members, true)
+      .setAllowInvalid(true)
+      .build();
+
+    rowGroups.forEach((g, idx) => {
+      if (g === info.name) {
+        emailColIndices.forEach(col => {
+          sheet.getRange(2 + idx, col).setDataValidation(emailRule);
+        });
+      }
+    });
+  });
+
+  Logger.log("Permissions sheet written for class " + classname +
+    " with groups: " + groupsInfo.map(g => g.name).join(", "));
 }
+
+
+
+/**
+ * Multi-select cho Emails
+ */
+function onEdit(e) {
+  const sheet = e.range.getSheet();
+  if (sheet.getName() !== "Permissions") return;
+
+  const headerRow = 1;
+  const editedRow = e.range.getRow();
+  const editedCol = e.range.getColumn();
+
+  if (editedRow <= headerRow) return;
+
+  const header = sheet.getRange(headerRow, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const colName = header[editedCol - 1];
+
+  if (colName !== "Emails") return;
+
+  const newValue = e.value;
+  if (!newValue) return;
+
+  let oldValue = e.oldValue || "";
+  let oldList = oldValue.split(",").map(s => s.trim()).filter(s => s !== "");
+
+  if (oldList.indexOf(newValue) === -1) {
+    oldList.push(newValue);
+  } else {
+    // Nếu chọn lại email đã có thì xóa đi (toggle)
+    oldList = oldList.filter(v => v !== newValue);
+  }
+
+  const groupName = sheet.getRange(editedRow, 2).getValue();
+  const className = sheet.getRange(editedRow, 1).getValue();
+  const members = getGroupMembers(className, groupName);
+
+  // giữ đúng thứ tự gốc
+  const finalList = members.filter(m => oldList.indexOf(m) !== -1);
+
+  sheet.getRange(editedRow, editedCol).setValue(finalList.join(", "));
+}
+
+/**
+ * Tính độ sâu tối đa của cây
+ */
+function getMaxDepth(node, depth = 1) {
+  let maxDepth = depth;
+  if (node.children && node.children.length > 0) {
+    node.children.forEach(child => {
+      maxDepth = Math.max(maxDepth, getMaxDepth(child, depth + 1));
+    });
+  }
+  return maxDepth;
+}
+
+/**
+ * Thu thập ID + details thư mục
+ */
+function collectFolderIdsWithDetails(folder) {
+  const children = [];
+  const subfolders = folder.getFolders();
+  while (subfolders.hasNext()) {
+    const sub = subfolders.next();
+    children.push(collectFolderIdsWithDetails(sub));
+  }
+  return { name: folder.getName(), id: folder.getId(), children: children };
+}
+
 
 ////////////////////////////////////////////////////////////////////////////
 
