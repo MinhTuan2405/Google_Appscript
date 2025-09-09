@@ -27,6 +27,9 @@ function onOpen () {
     .addItem ('Update Permissions', 'updatePerrmissions')
     .addSeparator ()
 
+    .addItem ('Apply rules', 'applyRules')
+    .addSeparator ()
+
 
     // hihi
     // end create menu process
