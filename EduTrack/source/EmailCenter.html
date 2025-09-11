@@ -243,22 +243,16 @@ input:focus {
       <option value="">Loading...</option>
     </select>
     <div class="button-row">
-      <button onclick="addFolder(null)">+ Root</button>
-      <button onclick="showPattern()">Preview</button>
+      <button onclick="sendMails()">Send</button>
     </div>
   </div>
 
   <div id="rootsContainer"></div>
   <div id="patternResult"></div>
 
-  <div id="resultMenu">
-    <button onclick="generateFolder()">Generate</button>
-    <div id="statusMessage"></div>
-  </div>
-
   <div id="loadingOverlay">
     <div class="spinner"></div>
-    Creating folders, please wait...
+    Please wait...
   </div>
 
   
@@ -279,138 +273,6 @@ input:focus {
     }
 
     renderClassDropdown();
-
-    function addFolder(container) {
-      const folderDiv = document.createElement('div');
-      folderDiv.className = 'folder';
-
-      folderDiv.innerHTML = `
-        <div class="folder-left">
-          <span>📁</span>
-          <input type="text" placeholder="Folder Name">
-        </div>
-        <div class="folder-actions">
-          <button onclick="addChild(this)">+ Sub</button>
-          <button onclick="addSibling(this)">+ Sib</button>
-          <button onclick="deleteFolder(this)">❌</button>
-        </div>
-        <div class="subfolders"></div>
-      `;
-
-      if (!container) {
-        rootsContainer.appendChild(folderDiv);
-      } else {
-        container.appendChild(folderDiv);
-      }
-    }
-
-    function addChild(btn) {
-      const currentFolder = btn.closest('.folder');
-      const subContainer = currentFolder.querySelector('.subfolders');
-      addFolder(subContainer);
-    }
-
-    function addSibling(btn) {
-      const currentFolder = btn.closest('.folder');
-      const parentContainer = currentFolder.parentElement;
-      addFolder(parentContainer);
-    }
-
-    function deleteFolder(btn) {
-      const folder = btn.closest('.folder');
-      folder.remove();
-    }
-
-    function collectFolders(container) {
-      const folders = [];
-      const divs = container.querySelectorAll(':scope > .folder');
-      divs.forEach(div => {
-        const name = div.querySelector('input').value.trim();
-        const children = collectFolders(div.querySelector('.subfolders'));
-        if(name || children.length > 0) {
-          folders.push({name, children});
-        }
-      });
-      return folders;
-    }
-
-    function formatPattern(folders, prefix = '') {
-      let text = '';
-      let obj = [];
-
-      folders.forEach((f, index) => {
-          const isLast = index === folders.length - 1;
-          const branch = prefix + (isLast ? '└─ ' : '├─ ');
-
-          if (f.name) {
-          text += branch + f.name + '\n';
-          }
-
-          let childrenResult = formatPattern(f.children, prefix + (isLast ? '   ' : '│  '));
-
-          obj.push({
-          name: f.name,
-          children: childrenResult.obj
-          });
-
-          text += childrenResult.text;
-      });
-
-      return { text, obj };
-    }
-
-
-    function showPattern() {
-       const selectedClass = classSelect.value;
-       if(!selectedClass) return;
-
-       const folders = collectFolders(rootsContainer);
-       const result = formatPattern(folders);
-
-       let patternText = `Class: ${selectedClass}\n`;
-       patternText += result.text || 'No folders defined.';
-       document.getElementById('patternResult').innerText = patternText;
-    }
-
-
-    function generateFolder() {
-      const classname = document.getElementById('classSelect').value;
-      if (!classname) return;
-
-      const folders = collectFolders(rootsContainer);
-      const result = formatPattern(folders);
-
-      const overlay = document.getElementById('loadingOverlay');
-      const statusEl = document.getElementById('statusMessage');
-      overlay.style.display = 'flex';
-      statusEl.textContent = '';
-      statusEl.className = '';
-
-      google.script.run
-        .withFailureHandler(function (err) {
-          overlay.style.display = 'none';
-          statusEl.textContent = "❌ Error: " + err.message;
-          statusEl.className = "error";
-        })
-        .withSuccessHandler(function () {
-          google.script.run
-            .withSuccessHandler(function () {
-              overlay.style.display = 'none';
-              statusEl.textContent = "✅ Folders created successfully!";
-              statusEl.className = "success";
-
-              google.script.run
-                .writePermissionsSheet (classname)
-            })
-            .withFailureHandler(function (err) {
-              overlay.style.display = 'none';
-              statusEl.textContent = "❌ Error: " + err.message;
-              statusEl.className = "error";
-            })
-            .createClassDrive(classname, result.obj);
-        })
-        .writeClassTree(classname, result.obj);
-    }
 
   </script>
 </body>

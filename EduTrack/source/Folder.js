@@ -151,7 +151,7 @@ function getAllGroupOfClass(classname) {
   return res;
 }
 
-function getGroupMembers(classname='COMP1314', groupname='Nhóm kia tào lao á') {
+function getGroupMembers(classname, groupname) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Class List');
   if (!sheet) return [];
 
@@ -526,11 +526,10 @@ function addEditorNoEmail(fileId, email) {
  * - Ensures each row length === header.length (avoids setValues column mismatch)
  * - Adds DataValidation for Emails (per group members) and Permission (global)
  */
-function writePermissionsSheet(classname = 'COMP1314') {
+function writePermissionsSheet(classname='COMP1254') {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName("Permissions");
   if (!sheet) sheet = ss.insertSheet("Permissions");
-  else sheet.clear();
 
   const root = getSpreadsheetParent();
   const userprofile = getOrCreateFolder(root, "userprofile");
@@ -556,18 +555,22 @@ function writePermissionsSheet(classname = 'COMP1314') {
   });
 
   if (groupsInfo.length === 0) {
-    sheet.getRange(1, 1).setValue("No groups with folders found for class: " + classname);
+    const lastRow = sheet.getLastRow();
+    sheet.getRange(lastRow + 1, 1).setValue("No groups with folders found for class: " + classname);
     return;
   }
 
-  // 2) Header
+  // 2) Header (chỉ viết 1 lần nếu sheet trống)
   const levelsCount = Math.max(0, globalMaxDepth - 1);
   const header = ["classname", "groupname", "Folder ID", "Emails", "Permission"];
   for (let i = 1; i <= levelsCount; i++) {
     header.push(`LEVEL ${i}`, "Folder ID", "Emails", "Permission");
   }
-  sheet.getRange(1, 1, 1, header.length).setValues([header])
-       .setBackground("#d9ead3").setFontWeight("bold");
+
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, header.length).setValues([header])
+      .setBackground("#d9ead3").setFontWeight("bold");
+  }
 
   function levelBaseIndex(level) {
     return 5 + (level - 1) * 4; // 0-based
@@ -581,7 +584,7 @@ function writePermissionsSheet(classname = 'COMP1314') {
     const members = info.members || [];
     const membersStr = members.join(", ");
 
-    function traverse(node, level = 0, isRoot = false) {
+    function traverse(node, level = 0) {
       const row = Array(header.length).fill("");
 
       if (level === 0) {
@@ -610,11 +613,12 @@ function writePermissionsSheet(classname = 'COMP1314') {
       }
     }
 
-    traverse(info.tree, 0, true);
+    traverse(info.tree, 0);
   });
 
-  // 4) Write rows
-  sheet.getRange(2, 1, allRows.length, header.length).setValues(allRows);
+  // 4) Append rows
+  const startRow = sheet.getLastRow() + 1;
+  sheet.getRange(startRow, 1, allRows.length, header.length).setValues(allRows);
 
   // 5) Indices
   const emailColIndices = [];
@@ -630,7 +634,7 @@ function writePermissionsSheet(classname = 'COMP1314') {
     .setAllowInvalid(true)
     .build();
   permColIndices.forEach(col => {
-    sheet.getRange(2, col, allRows.length).setDataValidation(permRule);
+    sheet.getRange(startRow, col, allRows.length).setDataValidation(permRule);
   });
 
   // 7) Email dropdown theo group
@@ -645,13 +649,13 @@ function writePermissionsSheet(classname = 'COMP1314') {
     rowGroups.forEach((g, idx) => {
       if (g === info.name) {
         emailColIndices.forEach(col => {
-          sheet.getRange(2 + idx, col).setDataValidation(emailRule);
+          sheet.getRange(startRow + idx, col).setDataValidation(emailRule);
         });
       }
     });
   });
 
-  Logger.log("Permissions sheet written for class " + classname +
+  Logger.log("Permissions sheet appended for class " + classname +
     " with groups: " + groupsInfo.map(g => g.name).join(", "));
 }
 

@@ -30,6 +30,9 @@ function onOpen () {
     .addItem ('Apply rules', 'applyRules')
     .addSeparator ()
 
+    .addItem ('Send Notifications', 'emailCenter')
+    .addSeparator ()
+
 
     // hihi
     // end create menu process
